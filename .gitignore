@@ -1,10 +1,15 @@
-# IDE Files
+# IDE files
 .vscode
+template.prj
+template.pnproj
 
 # Build files
 build
 nds-portfolio.elf
 nds-portfolio.nds
+
+# Testing files
+runtests
 
 # Templates I have saved in the project directory for quick reference
 references
