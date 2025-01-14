@@ -172,6 +172,12 @@ docs:
 	@doxygen doxy-config.conf
 
 #---------------------------------------------------------------------------------
+runtests: test/test_maze.cpp
+	@g++ -I include source/maze.cpp test/test_maze.cpp -g -lcheck -fsanitize=address \
+	-o runtests
+	@./runtests
+
+#---------------------------------------------------------------------------------
 
 else
 
