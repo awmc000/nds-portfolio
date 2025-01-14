@@ -7,4 +7,8 @@ nds-portfolio.elf
 nds-portfolio.nds
 
 # Templates I have saved in the project directory for quick reference
-animate_simple
+references
+
+# Documentation generation files
+html
+latex
