@@ -14,9 +14,9 @@
 
 /**
  * NOT BY ME! By Relminator
- * Simple box, triangle, and putpixel demo
+ * Radially displaced pixels demo
 */
-void simple(int frame);
+void pixels(int frame);
 
 //---------------------------------------------------------------------------------
 int main(void) {
@@ -32,7 +32,7 @@ int main(void) {
 
 	while(1) {
 		frame++;
-		simple(frame);
+		pixels(frame);
 		glFlush(0);
 		swiWaitForVBlank();
 		scanKeys();
@@ -42,90 +42,48 @@ int main(void) {
 
 }
 
-void simple(int frame)
+void pixels(int frame)
 {
+	// Elastic radius
+	int radius = 40+ (abs(sinLerp(frame*20)*80) >> 12);
+	
+	// Do some funky color cycling
+	int red = abs(sinLerp(frame*220)*31) >> 12 ;
+	int green = abs(sinLerp(frame*140)*31) >> 12 ;
+	int blue = abs(sinLerp(frame*40)*31) >> 12 ;
+	
 
+	// speed opf animation
+	int i = ( frame* 140 ) & 32767;
+	
+	// duh!
+	int angle;
+	
 	// set up GL2D for 2d mode
 	glBegin2D();
 
-		// Do some funky color cycling
-		int red = abs(sinLerp(frame*220)*31) >> 12 ;
-		int green = abs(sinLerp(frame*140)*31) >> 12 ;
-		int blue = abs(sinLerp(frame*40)*31) >> 12 ;
-		
-		// fill the whole screen with a gradient box
-		glBoxFilledGradient( 0, 0, 255, 191,
-							 RGB15( red,  green,  blue ),
-							 RGB15(  blue, 31 - red,  green ),
-							 RGB15( green,  blue, 31 - red ),
-							 RGB15(  31 - green, red, blue )
-						   );
-		
-		// draw a black box
-		glBoxFilled( 200, 10,
-					 250, 180,
-					 RGB15(0,0,0)
-				    );
-		
-		// draw a border around the black box
-		glBox( 200, 10,
-			   250, 180,
-			   RGB15(0,31,0)
-		     );
-	
-		// draw a triangle
-		glTriangleFilled( 20, 100,
-						  200, 30,
-						  60, 40,
-						  RGB15(31,0,31)
-						);
-	
-		// draw a gradient triangle
-		glTriangleFilledGradient( 20, 100,
-								  200, 30,
-								  60, 40,
-								  RGB15(blue,red,green),
-								  RGB15(green,blue, red),
-								  RGB15(red,green,blue)
-								);
-		
-
-		// translucent mode
-		// Poly ID 1
-		glPolyFmt(POLY_ALPHA(16) | POLY_CULL_NONE | POLY_ID(1));
-		glBoxFilledGradient( 10, 50, 230, 150,
-							 RGB15( green,  0,  0 ),
-							 RGB15(  0, red,  0 ),
-							 RGB15( 31,  0, blue ),
-							 RGB15(  0, red, 31 )
-						   );
-
-		// translucent mode
-		// Poly ID 2
-		glPolyFmt(POLY_ALPHA(16) | POLY_CULL_NONE | POLY_ID(2));
-		
-		glTriangleFilledGradient( 70, 10,
-								  20, 130,
-								  230, 180,
-								  RGB15(red,green,blue),
-								  RGB15(blue,red,green),
-								  RGB15(green,blue, red)
-								);
-		                       
-		
-		// restore to normal(solid) rendering
-		glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE | POLY_ID(3));
-		
-		// draw a circle using putpixel
-		int i;
-		for( i = 0; i < BRAD_PI*2; i += 256)
+		// Draw a full revolution of some radially dispalced pixels
+		for( angle = 0; angle < BRAD_PI*2; angle += 64)
 		{
-			int x = (cosLerp(i) * 80 ) >> 12;
-			int y = (sinLerp(i) * 70 ) >> 12;
-			glPutPixel( HALF_WIDTH + x, HALF_HEIGHT + y, RGB15(red, green, blue) );
-		}
+		
+			int a2 = angle + i;
+			int x = cosLerp(angle*2) * radius;
+			int y = sinLerp(x/32 + a2) * radius;
+			x = cosLerp(y/64 + angle) * (radius+20);
+			y = sinLerp(x/64 + a2) * radius;
+			int x2 = -y;
+			int y2 = x;
 			
+			glPutPixel( HALF_WIDTH + (x >> 12), 
+						HALF_HEIGHT + (y >> 12), 
+						RGB15(red,green,blue)
+					  );
+			glPutPixel( HALF_WIDTH + (x2 >> 12), 
+						HALF_HEIGHT + (y2 >> 12), 
+						RGB15(green,blue,red)
+					  );
+			
+		}
+		
 	glEnd2D();
-	
-
 }
