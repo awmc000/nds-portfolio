@@ -22,16 +22,10 @@
 */
 void pixels(int frame);
 
-
 /**
- * Untextured raycaster: Draw a frame
+ * Reads and handles input, acting on player position, direction, and camera plane
 */
-void raycast(
-	Maze * maze,		// The map
-	struct v2f * pos,	// Player fine position
-	struct v2f * dir,	// Player looking direction
-	struct v2f * plane	// Camera plane
-);
+void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane);
 
 //---------------------------------------------------------------------------------
 int main(void) {
@@ -51,36 +45,45 @@ int main(void) {
 	Raycaster * rc = new Raycaster(maze, &pos, &dir, &plane);
 
 	int frame = 0;
-	int threshold = 100;
 
 	while(1) {
 		frame++;
 
 		rc->drawFrame();
-		// raycast(maze, &pos, &dir, &plane);
 		glFlush(0);
 
 		swiWaitForVBlank();
-		scanKeys();
-		int pressed = keysDown();
 		
-		if (pressed & KEY_START) break;
-	
-		if (pressed & KEY_UP) pos.y--;
-		if (pressed & KEY_DOWN) pos.y++;
-		if (pressed & KEY_LEFT) pos.x--;
-		if (pressed & KEY_RIGHT) pos.x++;
-
-		if (pressed & KEY_L) dir.x -= 0.05;
-		if (pressed & KEY_R) dir.x += 0.05;
-
-		if (pressed & KEY_A) threshold += 10;
-		if (pressed & KEY_B) threshold -= 10;
+		handleInput(&pos, &dir, &plane);
 
 		consoleClear();
-		iprintf("x: %d, y: %d, frame %d th %d", (int) pos.x,(int) pos.y, frame, threshold);
+		iprintf("x: %d, y: %d, frame %d", (int) pos.x,(int) pos.y, frame);
 	}
 }
+
+void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane) {
+	scanKeys();
+	int pressed = keysDown();
+		
+	if (pressed & KEY_START) 	exit(0);
+	
+	if (pressed & KEY_UP) 		pos->y -= 0.25;
+	if (pressed & KEY_DOWN) 	pos->y += 0.25;
+	if (pressed & KEY_LEFT) 	pos->x -= 0.25;
+	if (pressed & KEY_RIGHT) 	pos->x += 0.25;
+
+	if (pressed & KEY_L) {
+		double oldDirX = dir->x;
+		dir->x = dir->x * cos(0.5) - dir->y * sin(0.5);
+		dir->y = oldDirX * sin(0.5) + dir->y * cos(0.5);
+
+		double oldPlaneX = plane->x;
+		plane->x = plane->x * cos(0.5) - plane->y * sin(0.5);
+		plane->y = oldPlaneX * sin(0.5) + plane->y * cos(0.5);
+	}
+	// TODO: rotate right	
+}
+
 
 void pixels(int frame) {
 	// Elastic radius
@@ -124,112 +127,5 @@ void pixels(int frame) {
 			
 		}
 		
-	glEnd2D();
-}
-
-void raycast(Maze * maze, struct v2f * pos, struct v2f * dir, struct v2f * plane) {
-	glBegin2D();
-	// For each vertical stripe...
-	for (int x = 0; x < SCREEN_WIDTH; x++) {
-		double cameraX = 2 * x / (double)SCREEN_WIDTH - 1;
-		
-		struct v2f rayDir = {
-			dir->x + (plane->x * cameraX),
-			dir->y + (plane->y * cameraX)
-		};
-
-		// Tile position
-		struct v2i mapPos = {
-			(int) pos->x,
-			(int) pos->y
-		};
-
-		struct v2f sideDist = {
-			0.0,
-			0.0
-		};
-
-		// Length of ray from one x-line to the next x-line, and y-line to next y-line
-		struct v2f deltaDistance = {
-			std::fabs(1.0 / rayDir.x),
-			std::fabs(1.0 / rayDir.y)
-		};
-
-		double perpWallDist;
-
-		struct v2i step = {
-			0,
-			0
-		};
-
-		bool hit = false;
-		int side;
-
-		// Horizontal step direction
-		if (rayDir.x < 0) {
-			step.x = -1; 
-			sideDist.x = (pos->x - mapPos.x) * deltaDistance.x;
-		} else {
-			step.x = 1;
-			sideDist.x = (mapPos.x + 1.0 - pos->x) * deltaDistance.x;
-		}
-
-		// Vertical step direction
-		if (rayDir.y < 0) {
-			step.y = -1; 
-			sideDist.y = (pos->y - mapPos.y) * deltaDistance.y;
-		} else {
-			step.y = 1;
-			sideDist.y = (mapPos.y + 1.0 - pos->y) * deltaDistance.y;
-		}
-
-		// DDA algorithm
-		while (!hit) {
-			if (sideDist.x < sideDist.y) {
-				sideDist.x += deltaDistance.x;
-				mapPos.x += step.x;
-				side = 0;
-			} else {
-				sideDist.y += deltaDistance.y;
-				mapPos.y += step.y;
-				side = 1;
-			}
-			if (maze->getCell(mapPos.y, mapPos.x) > 0) {
-				hit = true;
-			}
-		}
-
-		if (side == 0) {
-			perpWallDist = (sideDist.x - deltaDistance.x);
-		} else {
-			perpWallDist = (sideDist.y - deltaDistance.y);
-		}
-
-		// Compute how to draw the line
-		int lineHeight = (int) (SCREEN_HEIGHT / perpWallDist);
-
-		int drawStart = -lineHeight / 2 + SCREEN_HEIGHT / 2;
-		if (drawStart < 0) drawStart = 0;
-		
-		int drawEnd = lineHeight / 2 + SCREEN_HEIGHT / 2;
-		if (drawEnd >= SCREEN_HEIGHT) drawEnd = SCREEN_HEIGHT - 1;
-
-		int color;
-
-		switch (maze->getCell(mapPos.y, mapPos.x)) {
-			case 1:
-				color = RGB15(31, 2, 2);
-				break;
-			default:
-				color = RGB15(15, 0, 15);
-				break;
-		}
-		
-		if (side == 1) {
-			color = RGB15(15, 2, 4);
-		}
-		
-		glLine(x, drawStart, x, drawEnd, color);
-	}
 	glEnd2D();
 }
