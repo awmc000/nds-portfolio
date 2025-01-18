@@ -1,5 +1,5 @@
 /**
- * Maze representation and raycaster.
+ * Maze representation used by Raycaster.
 */
 #ifndef MAZE_HPP
 #define MAZE_HPP

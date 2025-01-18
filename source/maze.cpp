@@ -14,6 +14,13 @@ Maze::~Maze() {
 
 void Maze::build() {
     boxOutside();
+
+    // Some random dots
+    cell[10][10] = 1;
+    cell[8][10] = 1;
+    cell[20][20] = 1;
+    cell[50][10] = 1;
+    cell[19][8] = 1;
 }
 
 int Maze::getCell(int y, int x) const {
