@@ -1,6 +1,7 @@
 #include "raycaster.hpp"
 #include <nds.h>
 #include <gl2d.h>
+#include <cstdio>
 #include <cmath>
 
 void Raycaster::drawFrame() {
@@ -92,17 +93,20 @@ void Raycaster::drawFrame() {
 
 		int color;
 
+		// max dist is 64 so scale accordingly - subtract dist / 2?
+		int intensity = 31 - (perpWallDist / 2);
+
 		switch (maze->getCell(mapPos.y, mapPos.x)) {
 			case 1:
-				color = RGB15(31, 2, 2);
+				color = RGB15(intensity, 2, 2);
 				break;
 			default:
-				color = RGB15(15, 0, 15);
+				color = RGB15(intensity, 0, intensity);
 				break;
 		}
 		
 		if (side == 1) {
-			color = RGB15(15, 2, 4);
+			color = RGB15(intensity, 2, intensity);
 		}
 		
 		glLine(x, drawStart, x, drawEnd, color);

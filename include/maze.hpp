@@ -34,7 +34,17 @@ public:
     /**
      * Returns the contents of a cell.
     */
-    int getCell(int y, int x) const;
+    int getCell(const int &y, const int &x) const;
+
+    /**
+     * Returns whether or not a certain cell has been marked as visited
+    */
+    bool cellVisited(const int &y, const int &x) const;
+
+    /**
+     * Marks a cell as visited
+    */
+    void visit(const int &y, const int &x);
 
 private:
 
@@ -52,6 +62,11 @@ private:
      * Grid itself as 2D array of ints.
      **/ 
     int cell[MAZE_HEIGHT][MAZE_WIDTH];
+
+    /**
+     * Tracks visited cells for minimap drawing.
+    */
+    bool visited[MAZE_HEIGHT][MAZE_WIDTH];
 };
 
 #endif // MAZE_HPP

@@ -4,6 +4,7 @@ Maze::Maze() {
     for (int y = 0; y < MAZE_HEIGHT; y++) {
         for (int x = 0; x < MAZE_WIDTH; x++) {
             cell[y][x] = 0;
+            visited[y][x] = false;
         }
     }
 }
@@ -23,7 +24,17 @@ void Maze::build() {
     cell[19][8] = 1;
 }
 
-int Maze::getCell(int y, int x) const {
+bool Maze::cellVisited(const int &y, const int &x) const
+{
+    return visited[y][x];
+}
+
+void Maze::visit(const int &y, const int &x)
+{
+    visited[y][x] = true;
+}
+
+int Maze::getCell(const int &y, const int &x) const {
     if (y > MAZE_HEIGHT - 1 || y < 0) {
         return -1;
     }
