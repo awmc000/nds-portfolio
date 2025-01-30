@@ -17,6 +17,7 @@
 #define BRAD_PI (1 << 14)
 
 #define ROTATE_INCREMENT 0.25
+#define MOVE_INCREMENT 0.25
 /**
  * NOT BY ME! By Relminator
  * Radially displaced pixels demo
@@ -26,12 +27,12 @@ void pixels(int frame);
 /**
  * Reads and handles input, acting on player position, direction, and camera plane
 */
-void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane);
+void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane, Maze * maze);
 
 /**
  * Draws a minimap of sorts over top of the display
 */
-void drawMinimap(Maze * maze);
+void drawMinimap(Maze * maze, struct v2f * pos);
 
 //---------------------------------------------------------------------------------
 int main(void) {
@@ -55,20 +56,13 @@ int main(void) {
 	struct v2f plane = {0.0, 0.66};
 	Raycaster * rc = new Raycaster(maze, &pos, &dir, &plane);
 
-	int frame = 0;
-
-	while(1) {
-		frame++;
-
-		pixels(frame);
-
+	while(1) {		
 		rc->drawFrame();
-		drawMinimap(maze);
+		drawMinimap(maze, &pos);
 		glFlush(0);
-
 		swiWaitForVBlank();
 		
-		handleInput(&pos, &dir, &plane);
+		handleInput(&pos, &dir, &plane, maze);
 
 		maze->visit((int)pos.y, (int)pos.x);
 
@@ -76,26 +70,27 @@ int main(void) {
 	}
 }
 
-void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane) {
+void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane, Maze * maze) {
 	scanKeys();
-	int pressed = keysDownRepeat();
+	int pressed = keysHeld();
 		
 	if (pressed & KEY_START) 	exit(0);
 	
 	if (pressed & KEY_UP) {
-		pos->x += dir->x;
-		pos->y += dir->y;
+		if (maze->getCell((int)pos->y + dir->y * 3 * MOVE_INCREMENT, (int)pos->x + dir->x * 3 * MOVE_INCREMENT) <= 0) {
+			pos->x += dir->x * MOVE_INCREMENT;
+			pos->y += dir->y * MOVE_INCREMENT;
+		}
 	}
 
 	if (pressed & KEY_DOWN) {
-		pos->x -= dir->x;
-		pos->y -= dir->y;
+		if (maze->getCell((int)pos->y - dir->y * 3 * MOVE_INCREMENT, (int)pos->x - dir->x * 3 * MOVE_INCREMENT) <= 0) {
+			pos->x -= dir->x * MOVE_INCREMENT;
+			pos->y -= dir->y * MOVE_INCREMENT;
+		}
 	}
 
-	if (pressed & KEY_LEFT) 	pos->x -= dir->x;
-	if (pressed & KEY_RIGHT) 	pos->x += dir->x;
-
-	if (pressed & KEY_L) {
+	if (pressed & KEY_R) {
 		double oldDirX = dir->x;
 		dir->x = dir->x * cos(ROTATE_INCREMENT) - dir->y * sin(ROTATE_INCREMENT);
 		dir->y = oldDirX * sin(ROTATE_INCREMENT) + dir->y * cos(ROTATE_INCREMENT);
@@ -104,7 +99,7 @@ void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane) {
 		plane->x = plane->x * cos(ROTATE_INCREMENT) - plane->y * sin(ROTATE_INCREMENT);
 		plane->y = oldPlaneX * sin(ROTATE_INCREMENT) + plane->y * cos(ROTATE_INCREMENT);
 	}
-	if (pressed & KEY_R) {
+	if (pressed & KEY_L) {
 		double oldDirX = dir->x;
 		dir->x = dir->x * cos(-ROTATE_INCREMENT) - dir->y * sin(-ROTATE_INCREMENT);
 		dir->y = oldDirX * sin(-ROTATE_INCREMENT) + dir->y * cos(-ROTATE_INCREMENT);
@@ -115,8 +110,10 @@ void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane) {
 	}
 }
 
-void drawMinimap(Maze * maze) {
+void drawMinimap(Maze * maze, struct v2f * pos) {
 	glBegin2D();
+
+	// Plot yellow pixels for all visited cells
 	for (int y = 0; y < MAZE_HEIGHT; y++) {
 		for (int x = 0; x < MAZE_WIDTH; x++) {
 			if (maze->cellVisited(y, x)) {
@@ -124,6 +121,10 @@ void drawMinimap(Maze * maze) {
 			}
 		}
 	}
+
+	// Plot a single white pixel on the current position
+	glPutPixel((int) pos->y, (int) pos->x + (SCREEN_WIDTH / 2), RGB15(31, 31, 31));
+	
 	glEnd2D();
 }
 
