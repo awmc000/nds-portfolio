@@ -18,6 +18,14 @@
 
 #define ROTATE_INCREMENT 0.25
 #define MOVE_INCREMENT 0.25
+
+enum MazeState {
+	MAIN_MENU = 0,
+	PLAY = 1
+};
+
+enum MazeState state = MAIN_MENU;
+
 /**
  * NOT BY ME! By Relminator
  * Radially displaced pixels demo
@@ -33,6 +41,11 @@ void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane, Maze * 
  * Draws a minimap of sorts over top of the display
 */
 void drawMinimap(Maze * maze, struct v2f * pos);
+
+/**
+ * Draws a main menu graphic
+*/
+void drawMenu();
 
 //---------------------------------------------------------------------------------
 int main(void) {
@@ -56,9 +69,13 @@ int main(void) {
 	struct v2f plane = {0.0, 0.66};
 	Raycaster * rc = new Raycaster(maze, &pos, &dir, &plane);
 
-	while(1) {		
-		rc->drawFrame();
-		drawMinimap(maze, &pos);
+	while(1) {
+		if (state == PLAY) {
+			rc->drawFrame();
+			drawMinimap(maze, &pos);
+		} else if (state == MAIN_MENU) {
+			drawMenu();
+		}
 		glFlush(0);
 		swiWaitForVBlank();
 		
@@ -72,42 +89,60 @@ int main(void) {
 
 void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane, Maze * maze) {
 	scanKeys();
-	int pressed = keysHeld();
+	int pressed = keysDown();
 		
 	if (pressed & KEY_START) 	exit(0);
 	
-	if (pressed & KEY_UP) {
-		if (maze->getCell((int)pos->y + dir->y * 3 * MOVE_INCREMENT, (int)pos->x + dir->x * 3 * MOVE_INCREMENT) <= 0) {
-			pos->x += dir->x * MOVE_INCREMENT;
-			pos->y += dir->y * MOVE_INCREMENT;
+	if (pressed & KEY_A) {
+		state = state == MAIN_MENU ? PLAY : MAIN_MENU;
+	}
+
+	// continuous press rather than single press/debounced input follows
+	pressed = keysHeld();
+
+	// State dependent input follows
+	if (state == MAIN_MENU) {
+
+	} else if (state == PLAY) {
+		if (pressed & KEY_UP) {
+			if (maze->getCell((int)pos->y + dir->y * 3 * MOVE_INCREMENT, (int)pos->x + dir->x * 3 * MOVE_INCREMENT) <= 0) {
+				pos->x += dir->x * MOVE_INCREMENT;
+				pos->y += dir->y * MOVE_INCREMENT;
+			}
+		}
+
+		if (pressed & KEY_DOWN) {
+			if (maze->getCell((int)pos->y - dir->y * 3 * MOVE_INCREMENT, (int)pos->x - dir->x * 3 * MOVE_INCREMENT) <= 0) {
+				pos->x -= dir->x * MOVE_INCREMENT;
+				pos->y -= dir->y * MOVE_INCREMENT;
+			}
+		}
+
+		if (pressed & KEY_R) {
+			double oldDirX = dir->x;
+			dir->x = dir->x * cos(ROTATE_INCREMENT) - dir->y * sin(ROTATE_INCREMENT);
+			dir->y = oldDirX * sin(ROTATE_INCREMENT) + dir->y * cos(ROTATE_INCREMENT);
+
+			double oldPlaneX = plane->x;
+			plane->x = plane->x * cos(ROTATE_INCREMENT) - plane->y * sin(ROTATE_INCREMENT);
+			plane->y = oldPlaneX * sin(ROTATE_INCREMENT) + plane->y * cos(ROTATE_INCREMENT);
+		}
+		if (pressed & KEY_L) {
+			double oldDirX = dir->x;
+			dir->x = dir->x * cos(-ROTATE_INCREMENT) - dir->y * sin(-ROTATE_INCREMENT);
+			dir->y = oldDirX * sin(-ROTATE_INCREMENT) + dir->y * cos(-ROTATE_INCREMENT);
+
+			double oldPlaneX = plane->x;
+			plane->x = plane->x * cos(-ROTATE_INCREMENT) - plane->y * sin(-ROTATE_INCREMENT);
+			plane->y = oldPlaneX * sin(-ROTATE_INCREMENT) + plane->y * cos(-ROTATE_INCREMENT);
 		}
 	}
+}
 
-	if (pressed & KEY_DOWN) {
-		if (maze->getCell((int)pos->y - dir->y * 3 * MOVE_INCREMENT, (int)pos->x - dir->x * 3 * MOVE_INCREMENT) <= 0) {
-			pos->x -= dir->x * MOVE_INCREMENT;
-			pos->y -= dir->y * MOVE_INCREMENT;
-		}
-	}
-
-	if (pressed & KEY_R) {
-		double oldDirX = dir->x;
-		dir->x = dir->x * cos(ROTATE_INCREMENT) - dir->y * sin(ROTATE_INCREMENT);
-		dir->y = oldDirX * sin(ROTATE_INCREMENT) + dir->y * cos(ROTATE_INCREMENT);
-
-		double oldPlaneX = plane->x;
-		plane->x = plane->x * cos(ROTATE_INCREMENT) - plane->y * sin(ROTATE_INCREMENT);
-		plane->y = oldPlaneX * sin(ROTATE_INCREMENT) + plane->y * cos(ROTATE_INCREMENT);
-	}
-	if (pressed & KEY_L) {
-		double oldDirX = dir->x;
-		dir->x = dir->x * cos(-ROTATE_INCREMENT) - dir->y * sin(-ROTATE_INCREMENT);
-		dir->y = oldDirX * sin(-ROTATE_INCREMENT) + dir->y * cos(-ROTATE_INCREMENT);
-
-		double oldPlaneX = plane->x;
-		plane->x = plane->x * cos(-ROTATE_INCREMENT) - plane->y * sin(-ROTATE_INCREMENT);
-		plane->y = oldPlaneX * sin(-ROTATE_INCREMENT) + plane->y * cos(-ROTATE_INCREMENT);
-	}
+void drawMenu() {
+	static int frame = 0;
+	pixels(frame++);
+	glBoxFilledGradient(50, 50, 90, 100, RGB15(1, 10, 2), RGB15(31, 0, 24), RGB15(31, 2, 10), RGB15(10, 10, 2));
 }
 
 void drawMinimap(Maze * maze, struct v2f * pos) {
