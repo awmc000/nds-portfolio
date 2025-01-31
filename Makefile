@@ -29,7 +29,7 @@ BUILD    := build
 SOURCES  := source
 INCLUDES := include
 DATA     := data
-GRAPHICS :=
+GRAPHICS := assets
 AUDIO    :=
 ICON     :=
 
@@ -213,9 +213,9 @@ $(SOUNDBANK) : $(MODFILES)
 # add additional rules like this for each image extension
 # you use in the graphics folders
 #---------------------------------------------------------------------------------
-%.s %.h: %.png %.grit
+%.s %.h: %.png
 #---------------------------------------------------------------------------------
-	grit $< -fts -o$*
+	grit $< -ff ./assets/sprite.grit -o$*
 
 #---------------------------------------------------------------------------------
 # Convert non-GRF game icon to GRF if needed

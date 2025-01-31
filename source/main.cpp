@@ -52,11 +52,12 @@ int main(void) {
 //---------------------------------------------------------------------------------
 
 	videoSetMode(MODE_5_3D);
-
 	videoSetModeSub(MODE_0_2D);
 	vramSetBankC(VRAM_C_SUB_BG);
-	PrintConsole * def = consoleGetDefault();
-	consoleInit(NULL, def->bgLayer, BgType_Text4bpp, BgSize_T_256x256, def->mapBase, def->gfxBase, false, true);
+
+	// set up bottom screen - risky
+	vramSetBankD(VRAM_D_SUB_SPRITE);
+	oamInit(&oamSub, SpriteMapping_1D_128, false);
 
 	glScreen2D();
 
@@ -64,8 +65,8 @@ int main(void) {
 
 	Maze * maze = new Maze();
 	maze->build();
-	struct v2f pos = {2, 2};
-	struct v2f dir = {1, 0};
+	struct v2f pos = {2.0, 2.0};
+	struct v2f dir = {1.0, 0.0};
 	struct v2f plane = {0.0, 0.66};
 	Raycaster * rc = new Raycaster(maze, &pos, &dir, &plane);
 
@@ -142,7 +143,6 @@ void handleInput(struct v2f * pos, struct v2f * dir, struct v2f * plane, Maze * 
 void drawMenu() {
 	static int frame = 0;
 	pixels(frame++);
-	glBoxFilledGradient(50, 50, 90, 100, RGB15(1, 10, 2), RGB15(31, 0, 24), RGB15(31, 2, 10), RGB15(10, 10, 2));
 }
 
 void drawMinimap(Maze * maze, struct v2f * pos) {
