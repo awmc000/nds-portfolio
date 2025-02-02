@@ -4,8 +4,16 @@
 #ifndef MAZE_HPP
 #define MAZE_HPP
 
-#define MAZE_WIDTH          64
-#define MAZE_HEIGHT         64
+#include <set>
+#include <utility>
+#include <vector>
+
+using std::set;
+using std::pair;
+using std::vector;
+
+#define MAZE_WIDTH          12
+#define MAZE_HEIGHT         12
 
 #define MAZE_CELL_FLOOR     0
 #define MAZE_CELL_WALL      1
@@ -45,6 +53,16 @@ public:
      * Marks a cell as visited
     */
     void visit(const int &y, const int &x);
+
+    /**
+     * Generate list of walls for maze generation.
+     */
+    vector<pair<int, int>> mazeWalls();
+
+    /**
+     * Generate set of cells for maze generation.
+     */
+    set<pair<int, int>> mazeCells();
 
 private:
 

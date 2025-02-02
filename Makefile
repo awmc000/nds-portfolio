@@ -176,7 +176,6 @@ runtests: test/test_maze.cpp source/maze.cpp
 	@g++ -I include source/maze.cpp test/test_maze.cpp -g -lcheck -fsanitize=address \
 	-o runtests
 	@./runtests
-	@rm runtests
 
 #---------------------------------------------------------------------------------
 
